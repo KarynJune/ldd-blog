@@ -3,7 +3,7 @@
     <ul class="category-list">
     {{ range $key, $value := .Site.Taxonomies.categories }}
       <li class="category-item">
-          <a class="category-item-link" href="/categories/{{$key}}">
+          <a class="category-item-link" href="/categories/{{$key}}/">
             <span>{{ $key | humanize }}</span>  
             <span class="category-length">{{ len $value }}</span>
         </a>
@@ -17,7 +17,7 @@
     <ul class="tag-list">
     {{ range $key, $value := .Site.Taxonomies.tags }}
       <li class="tag-item">
-          <a class="tag-item-link" href="/tags/{{$key}}">
+          <a class="tag-item-link" href="/tags/{{$key}}/">
             <span>{{ $key | humanize }}</span>
         </a>
       </li>
@@ -30,7 +30,7 @@
     <ul class="post-list">
     {{ range ( where .Site.RegularPages.ByDate.Reverse "Type" "post" | first .Site.Params.postRecentCount ) }}
         <li class="post-item">
-            <a class="post-item-link" href="{{ .Permalink }}">
+            <a class="post-item-link" href="{{ .RelPermalink }}">
                 <span class="date">{{ .Date.Format (.Site.Params.dateFormatToUse | default "2006-01-02") }}</span>
                 <span class="title">{{ .Title }}</span>
                 {{ range .Params.categories }}

@@ -19,6 +19,10 @@
 hugo server
 ```
 
+## Deploy
+```bash
+docker-compose up -d --build
+```
 
 ## TODO
 - [x] 添加侧边栏：分类列表、标签列表、最新n篇文章、相关n篇文章
