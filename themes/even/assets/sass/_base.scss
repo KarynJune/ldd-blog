@@ -64,6 +64,16 @@ a {
   }
 }
 
+.main {
+  display: flex;
+}
+
+.sidebar {
+  width: $side-bar-width;
+  padding: 0 10px;
+  border-right: 1px solid lighten($theme-color, 30%);
+}
+
 .container {
   margin: 0 auto;
   width: $global-body-width;
@@ -74,10 +84,18 @@ a {
     width: 100%;
     box-shadow: -1px -5px 5px $gray;
   }
+  .sidebar {
+    display: none;
+  }
+  .content-wrapper {
+    width: 100% !important;
+  }
 }
 
 .content-wrapper {
   padding: $global-container-padding;
+  width: $content-wrapper-width;
+  box-sizing: border-box;
 }
 
 // make video fluid:

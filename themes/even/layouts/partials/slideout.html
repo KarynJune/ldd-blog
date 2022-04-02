@@ -15,13 +15,16 @@
   </div>
 </div>
 <nav id="mobile-menu" class="mobile-menu slideout-menu">
-  <ul class="mobile-menu-list">
+  <!-- <ul class="mobile-menu-list">
     {{ range .Site.Menus.main -}}
       <a href="{{ .URL | safeURL }}">
         <li class="mobile-menu-item">{{ .Name }}</li>
       </a>
     {{- end }}
-  </ul>
+  </ul> -->
+  <div class="mobile-sidebar">
+    {{ partial "sidebar.html" . }}
+  </div>
 
   {{ partial "header/language-selector.html" . }}
 </nav>

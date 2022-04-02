@@ -5,8 +5,8 @@
       <h1 class="post-title">{{ .Title }}</h1>
 
       <div class="post-meta">
-        <span class="post-time"> 创建于{{ .Date.Format (.Site.Params.dateFormatToUse | default "2006-01-02") }} </span>
-        <span class="update-time"> 更新于{{ .Lastmod.Format (.Site.Params.dateFormatToUse | default "2006-01-02") }} </span>
+        <span class="post-time"> {{ .Date.Format (.Site.Params.dateFormatToUse | default "2006-01-02") }} </span>
+        <!-- <span class="update-time"> 更新于{{ .Lastmod.Format (.Site.Params.dateFormatToUse | default "2006-01-02") }} </span> -->
         {{ with .Params.categories -}}
           <div class="post-category">
             {{ range . -}}

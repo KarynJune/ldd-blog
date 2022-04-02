@@ -12,3 +12,15 @@
 ├── themes  // 主题
 └── config.toml  // 配置
 ```
+
+## Develop
+```bash
+# 默认启动http://localhost:1313/
+hugo server
+```
+
+
+## TODO
+- [x] 添加侧边栏：分类列表、标签列表、最新n篇文章、相关n篇文章
+
+

@@ -28,26 +28,11 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
   priority = 0.5
   filename = "sitemap.xml"
 
-[[menu.main]]             # config your menu              # 配置目录
-  name = "首页"
-  weight = 10
-  identifier = "home"
-  url = "/"
-[[menu.main]]
-  name = "文章"
-  weight = 20
-  identifier = "archives"
-  url = "/post/"
-[[menu.main]]
-  name = "标签"
-  weight = 30
-  identifier = "tags"
-  url = "/tags/"
-[[menu.main]]
-  name = "分类"
-  weight = 40
-  identifier = "categories"
-  url = "/categories/"
+# [[menu.main]]             # config your menu              # 配置目录
+#   name = "首页"
+#   weight = 10
+#   identifier = "home"
+#   url = "/"
 
 [params]
   version = "4.x"           # Used to give a friendly message when you have an incompatible update
@@ -113,6 +98,10 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
 
   # Show language selector for multilingual site.
   showLanguageSelector = false
+
+  # sidebar
+  postRecentCount = 5  # 最新文章数量
+  postRelateCount = 5  # 相关文章数量
 
   [params.publicCDN]        # load these files from public cdn                          # 启用公共CDN，需自行定义
     enable = true
@@ -229,3 +218,4 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
 #  section = ["HTML", "RSS"]
 #  taxonomy = ["HTML", "RSS"]
 #  taxonomyTerm = ["HTML"]
+

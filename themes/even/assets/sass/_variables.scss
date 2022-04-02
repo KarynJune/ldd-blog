@@ -46,10 +46,10 @@ $global-font-color: #34495e !default;
 $global-font-size: 16px !default;
 
 // Global width of '<body>'.
-$global-body-width: 800px !default;
+$global-body-width: 1200px !default;
 
 // Padding of container main
-$global-container-padding: 0 20px !default;
+$global-container-padding: 0 30px !default;
 
 // Default line height for all type. `$global-lineheight` is 24px while `$global-font-size` is 16px.
 $global-lineheight: 1.5 !default;
@@ -73,6 +73,11 @@ $global-headings: (
   h6: 14px
 ) !default;
 
+// ========== Side Bar ========== //
+$side-bar-width: 200px;
+
+// ========== Content Wrapper ========== //
+$content-wrapper-width: 800px;
 
 // ========== Header ========== //
 // Padding of the site header.
@@ -147,7 +152,6 @@ $post-tags-padding: 15px 0 !default;
 // Font size of post pagination.
 $post-nav-font-size: 18px !default;
 
-
 // ========== TOC ========== //
 // Width of the post toc.
 $post-toc-width: 200px !default;
@@ -156,7 +160,7 @@ $post-toc-width: 200px !default;
 $post-toc-backgroud: rgba($deputy-color, 0.6) !default;
 
 // Margin left of the post toc.
-$post-toc-margin-left: $global-body-width - 15px !default;
+$post-toc-margin-left: $content-wrapper-width !default;
 
 // Font size of the post toc title.
 $post-toc-title-size: 20px !default;
