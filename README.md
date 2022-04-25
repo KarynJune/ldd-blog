@@ -1,7 +1,9 @@
 # ldd-blog
-赖东东的个人博客，使用hugo搭建，even主题
+
+赖东东的个人博客，使用 hugo 搭建，even 主题
 
 ## 项目结构
+
 ```
 .
 ├── archetypes  // 原型模版
@@ -14,17 +16,24 @@
 ```
 
 ## Develop
+
 ```bash
+# 新建文章
+hugo new post/article.md
+
 # 默认启动http://localhost:1313/
 hugo server
+
 ```
 
 ## Deploy
+
 ```bash
 docker-compose up -d --build
 ```
 
 ## TODO
-- [x] 添加侧边栏：分类列表、标签列表、最新n篇文章、相关n篇文章
 
-
+- [x] 添加侧边栏：分类列表、标签列表、最新 n 篇文章、相关 n 篇文章
+- [ ] 固定侧边栏
+- [ ] 全局搜索
