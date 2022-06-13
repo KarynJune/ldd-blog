@@ -45,7 +45,7 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
 
   # site info (optional)                                  # 站点信息（可选，不需要的可以直接注释掉）
   logoTitle = ""        # default: the title value    # 默认值: 上面设置的title值
-  keywords = ["赖东东", "赖东东的觉悟", "博客"]
+  keywords = ["赖东东", "赖东东的觉悟", "博客", "hugo", "blog"]
   description = "赖东东的个人博客."
 
   # paginate of archives, tags and categories             # 归档、标签、分类每页显示的文章数目，建议修改为一个较大的值
@@ -87,7 +87,7 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
   baiduPush = false        # baidu push                  # 百度
   baiduAnalytics = ""      # Baidu Analytics
   baiduVerification = "code-RKLlU88gZq"   # Baidu Verification
-  googleVerification = ""  # Google Verification         # 谷歌
+  googleVerification = "yvvYthpt_iwqSPzxGkauW1peV-JGb2qtwemlAjauQuA"  # Google Verification         # 谷歌
 
   # Link custom CSS and JS assets
   #   (relative to /static/css and /static/js respectively)
