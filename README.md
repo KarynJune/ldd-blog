@@ -2,6 +2,8 @@
 
 赖东东的个人博客，使用 hugo 搭建，even 主题
 
+[主页](https://blog.abigballoon.top/)
+
 ## 项目结构
 
 ```
@@ -16,6 +18,8 @@
 ```
 
 ## Develop
+
+[安装Hugo](https://gohugo.io/getting-started/installing)
 
 ```bash
 # 新建文章

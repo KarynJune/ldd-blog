@@ -15,6 +15,11 @@ pre > code {
   display: block;
 }
 
+.line{
+  line-height: $code-line-height;
+}
+
+
 // highlight.js
 figure.highlight {
   margin: 1em 0;
@@ -211,7 +216,7 @@ figure.highlight {
     border-collapse: collapse;
   }
 
-  /* LineNumbersTable */  .lnt { color: $gray; }
+  /* LineNumbersTable */  .lnt { color: $gray; line-height: $code-line-height;}
   /* LineHighlight */  .hl { display: block; width: 100%; background-color: #ffffcc }
 
   /* Keyword */  .k { color: #859900 }

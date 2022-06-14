@@ -4,6 +4,7 @@
 
 .post-content {
   word-wrap: break-word;
+  line-height: 2;
 
   @for $i from 1 through 6 {
     h#{$i} {
