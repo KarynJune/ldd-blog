@@ -24,7 +24,7 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
   name = "赖东东"
 
 [sitemap]                 # essential                     # 必需
-  changefreq = "weekly"
+  changefreq = "always"
   priority = 0.5
   filename = "sitemap.xml"
 
