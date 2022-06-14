@@ -1,4 +1,4 @@
-baseURL = "http://localhost:1313/"
+baseURL = "https://blog.abigballoon.top/"
 languageCode = "en"
 defaultContentLanguage = "zh-cn"                             # en / zh-cn / ... (This field determines which i18n file to use)
 title = "赖东东的觉悟"
