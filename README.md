@@ -22,7 +22,7 @@
 [安装Hugo](https://gohugo.io/getting-started/installing)
 
 ```bash
-# 新建文章
+# 新建文章，文章只能在post下，可以在post下建子目录
 hugo new post/article.md
 
 # 默认启动http://localhost:1313/
@@ -32,9 +32,7 @@ hugo server
 
 ## Deploy
 
-```bash
-docker-compose up -d --build
-```
+push到main分支后，GitHub Actions将自动部署
 
 ## TODO
 
