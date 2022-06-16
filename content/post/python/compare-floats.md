@@ -3,7 +3,7 @@ title: "Python正确的浮点数比较方式"
 date: 2022-06-14T10:03:13+08:00
 draft: false
 tags: ["Python", "翻译"]
-categories: ["Python", "翻译"]
+categories: ["Python"]
 ---
 
 > 翻译自原文：[https://davidamos.dev/the-right-way-to-compare-floats-in-python/](https://davidamos.dev/the-right-way-to-compare-floats-in-python/)
