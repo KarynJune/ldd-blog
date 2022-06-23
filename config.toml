@@ -89,7 +89,7 @@ copyright = ""            # default: author.name ↓        # 默认为下面配
   baiduVerification = "code-RKLlU88gZq"   # Baidu Verification
   googleVerification = "yvvYthpt_iwqSPzxGkauW1peV-JGb2qtwemlAjauQuA"  # Google Verification         # 谷歌
   search360Verification = "c3e901bca122faffe40329694e3a8825"  # 360 Verification         # 360
-  sougouVerification = "AITOpwHYzg"  # sougou Verification         # 搜狗
+  sougouVerification = "qUwjFhB2ED"  # sougou Verification         # 搜狗
 
   # Link custom CSS and JS assets
   #   (relative to /static/css and /static/js respectively)
