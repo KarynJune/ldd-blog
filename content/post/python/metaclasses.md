@@ -82,8 +82,8 @@ Python3中，所有的类都是新式类。因此，在Python3中可以交替引
 记住，[Python中一切都是对象](https://web.archive.org/web/20151210024637/https://mail.python.org/pipermail/python-list/2015-June/691689.html)。类也是对象。因此，类必须有一个类型。一个类的类型是什么呢？
 
 思考以下内容：
-```pyhton
->>> class Foo:
+```python
+>>> class Foo:s
 ...     pass
 ...
 >>> x = Foo()
