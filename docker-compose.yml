@@ -2,5 +2,6 @@ version: '2.0'
 services:
   web:
     build: .
+    restart: always
     ports:
-    - "1313:80"
+      - "1313:80"
