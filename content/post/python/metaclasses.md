@@ -83,7 +83,7 @@ Python3中，所有的类都是新式类。因此，在Python3中可以交替引
 
 思考以下内容：
 ```python
->>> class Foo:s
+>>> class Foo:
 ...     pass
 ...
 >>> x = Foo()
