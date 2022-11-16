@@ -1,274 +1,398 @@
 ---
-title: "每个Web开发人员必须了解URL编码"
-date: 2022-10-14T14:13:22+08:00
+title: "HTTP的URL编码"
+date: 2022-11-16T10:17:10+08:00
 draft: false
-tags: ["Web", "翻译"]
+tags: ["Web", "HTTP"]
 categories: ["Web"]
 ---
 
-> 翻译自原文：[https://blog.lunatech.com/posts/2009-02-03-what-every-web-developer-must-know-about-url-encoding](https://blog.lunatech.com/posts/2009-02-03-what-every-web-developer-must-know-about-url-encoding)
+## 背景
 
-这篇文章描述了有关**统一资源描述符**（[URL](http://en.wikipedia.org/wiki/URL)）的常见误解，然后尝试澄清[HTTP](http://en.wikipedia.org/wiki/HTTP)的[URL 编码](http://en.wikipedia.org/wiki/Percent-encoding)，再介绍常见问题及其解决方案。尽管这篇文章不特指某一个编程语言，但我们会用[Java](<http://en.wikipedia.org/wiki/Java_(programming_language)>)来说明问题，最后解释如何在 Java 中和多级 web 应用中解决 URL 编码问题。
+### 案例 1
 
-## 介绍
+向 Flask 接口发送 GET 请求，发现获取到查询参数中`+`变为了空格。
 
-当浏览[网络](http://en.wikipedia.org/wiki/World_Wide_Web)时，我们每天都在使用许多技术。显然有数据本身（网页）、数据格式、允许我们检索数据的传输机制，还有使得网络成为*网络*的基础：一个页面到其他页面到链接。这些链接就是 URL。
+```bash
+curl -X GET "http://127.0.0.1:5000/add?a=1+2"
 
-### 通用 URL 语法
+> GET /add?a=1+2 HTTP/1.1
+> Host: 127.0.0.1:5000
+> User-Agent: curl/7.79.1
+> Accept: */*
 
-目前为止每个人在他生活中至少看到过一次的 URL，以`http://www.google.com`为例。这是一个 URL。一个 URL 是一个*统一资源定位器*，实际是指向一个网页的指针（大多数情况下）。URL 实际在 1994 年[第一个规范](http://tools.ietf.org/html/rfc1738)以来就有非常明确的结构。
 
-我们可以提取 URL`http://www.google.com`的详细信息：
-｜ 部分 ｜ 数据 ｜
-| ----: | ----: |
-｜ 协议 ｜ http ｜
-｜ 主机地址 ｜ www.google.com ｜
+# 接口中使用request.args获取参数
+{
+  "a": "1 2"
+}
 
-假设我们看到一个像`https://bob:bobby@www.lunatech.com:8080/file;p=1?q=2#third`这样更复杂的 URL，我们可以提取到下面信息：
-｜ 部分 ｜ 数据 ｜
-| ----: | ----: |
-｜ 协议 ｜ https ｜
-｜ 用户名 ｜ bob ｜
-｜ 密码 ｜ bobby ｜
-｜ 主机地址 ｜ www.lunatech.com ｜
-｜ 端口 ｜ 8080 ｜
-｜ 路径 ｜ /file ｜
-｜ 路径参数 ｜ p=1 ｜
-｜ 查询参数 ｜ q=2 ｜
-｜ 片段 ｜ third ｜
-
-_协议_（这里指*http*和*https*（安全 HTTP））定义了 URL 剩下部分的结构。大多数网络[URL 协议](http://www.iana.org/assignments/uri-schemes.html)都有一个通用的第一部分，指示了用户名、密码、主机名称和端口，然后跟着特定于协议的部分。这个通用的部分处理了身份验证，并且能知道连接到哪里来请求数据。
-
-### HTTP URL 语法
-
-对于 HTTP 的 URL（用*http*和*https*协议），特定于协议的部分定义了数据的*路径*，然后跟着一个可选的*查询*和*片段*。
-
-*路径*部分包含在一个分层视图中，类似一个用文件夹和文件的文件系统层次结构。路径开始于一个`/`字符，然后每个文件夹再用`/`来分隔，直到到达文件。例如`/photos/egypt/cairo/first.jpg`有 4 个*路径段*：`photos`，`egypt`，`cairo`以及`first.jpg`，由此推断：文件`first.jpg`在`cairo`文件夹中，该文件夹在网站根目录里的`photos`文件夹下的`egypt`文件夹里。
-
-每个*路径段*可以有可选的*路径参数*（也叫[矩阵参数](http://www.w3.org/DesignIssues/MatrixURIs.html)），在*路径段*结尾的`;`后，并用`;`字符分隔。每个参数名称和对应的值用`=`字符分隔，例如：`/file;p=1`定义了*路径段*`file`有一个值为`1`的*路径参数*`p`。这些参数不常使用——面对现实吧——但是他们确实存在，并且我们甚至在[Yahoo RESTful API 文档](http://en.wikipedia.org/wiki/Representational_State_Transfer)中发现一个很好的理由来用它：
-
-> 矩阵参数使应用程序能够在调用 HTTP GET 操作时检索集合的一部分。有关示例请参阅[分页集合](http://developer.yahoo.com/social/rest_api_guide/partial-resources.html#paging-collection)。因为矩阵参数可以跟随 URI 中的任何集合路径段，所以可以在内部路径段上指定它们。
-
-在路径段之后我们可以看到和*路径*之间用`?`分隔的*查询*，包含多个（用`&`分隔）用`=`分隔的参数名和参数值。例如`/file?q=2`定义了一个值为`2`的*查询参数*`q`。当我们提交[HTML 表单](http://www.w3.org/TR/html401/interact/forms.html)或者像 Google 搜索那样调用应用时用的很多。
-
-HTTP URL 最后的*片段*指向的不是整个 HTML 页面，而是这个文件的特定部分。当你点击一个链接并且浏览器自动向下滚动来显示页面顶部看不到的部分时，你就是点击了一个带有*片段*的 URL。
-
-### URL 语法
-
-*http*URL 协议首次在[RFC1738](http://tools.ietf.org/html/rfc1738)（实际上甚至在[RFC1630](http://tools.ietf.org/html/rfc1630)之前）中定义，尽管后来没有重新定义*http*URL 协议，但整个 URL 语法已经从[扩展](http://tools.ietf.org/html/rfc2396)了[几次](http://tools.ietf.org/html/rfc2732)的[规范](http://tools.ietf.org/html/rfc1808)中概括为*统一资源标识符*（URI），以适应演变。
-
-其中有一个语法定义了 URL 如何组成并且每个部分如何分隔。例如，`://`分隔了*协议*和*主机*部分；*主机*和*路径段*部分用`/`分隔；*查询*部分跟在`?`后面。这意味着某些字符是被语法*保留*的，有的为所有 URI 保留，有的只为特定的协议保留。在不允许的部分使用的所有*保留*字符（例如一个*路径段*——假设是一个文件名——包含了`?`字符）必须被*URL 编码*。
-
-URL 编码是将字符（`?`）转换成改字符的无害表示，在 URL 中没有语法意义。通过用一个特定的[字符编码](http://en.wikipedia.org/wiki/Character_encoding)转换这个字符成一个字节序列来完成，然后用`%`开头的十六进制写入这些字节。因此问号在 URL 编码中为`%3F`。
-
-我们可以写一个指向`to_be_or_not_to_be?.jpg`图片的 URL：`http://example.com/to_be_or_not_to_be%3F.jpg`来确保没有人会认为这里面可能有一个*查询*部分。
-
-现在大多数浏览器先通过解码（将*百分比编码*的字节转换回原始的字符）来*显示*URL，同时为网络获取 URL 时能保持编码。这意味着用户几乎意识不到这样的这样的编码。
-
-另一方面，开发者或者网页作者又不得不意识到它，因为有许多的陷阱在里面。
-
-## URL 的常见陷阱
-
-如果你正在使用 URL，那么了解一些你应该避免的最常见的陷阱是值得的。这里我们给出不完整的清单。
-
-### 哪种字符编码？
-
-URL 编码没有为百分比编码字节定义任何特定的字符编码。通常[ASCII](http://en.wikipedia.org/wiki/ASCII)字母数字字符允许不转义，但是对于保留字符和哪些不存在于 ASCII 的字符（例如法语单词`nœud`中的`œ`，读作`knot`），我们不得不搞清楚什么时候用什么编码来转换成百分比编码字节。
-
-当然，如果只有[Unicode](http://en.wikipedia.org/wiki/Unicode)世界会更简单，因为**每个**字符都在这个集合中，但是这是[一个集合](http://en.wikipedia.org/wiki/Universal_Character_Set)，也可以说是个列表，而不是编码本身。
-
-Unicode 可以用几种如[UTF-8](http://en.wikipedia.org/wiki/UTF-8)或者[UTF-16](http://en.wikipedia.org/wiki/UTF-16/UCS-2)（还有其他几种）的编码方式来编码，但是问题仍然存在：URL（通常是 URI）应该用哪种编码呢？
-
-标准中没有定义一个 URI 可能指定用来的编码的任何方式，所以不得不从周围的信息中推导出来。对于 HTTP URL 可以是 HTML 的页面编码，或者 HTTP 头。这样通常令人迷惑且引发了很多错误。事实上，[最新版 URI 标准](http://tools.ietf.org/html/rfc3986)定义了新的 URI 方案使用[UTF-8](https://jira.lunatech.com/jira/browse/UTF-8)，并且*主机名称*（即时是现有方案）也使用这种编码，这引起了我的怀疑：*主机名*和*路径*部分真的可以用不同的编码吗？
-
-### 每个部分的保留字符都不同
-
-没错！没错！没错！（没错！）
-
-对于 HTTP URL，在*路径段*部分一个空格必须编码成`%20`（绝对不是`+`），尽管这个**在路径段中**`+`字符可以不用编码。
-
-现在在*查询*部分，空格可以编码成`+`（为了向后兼容：不要尝试在 URI 标准中查询）或者`%20`，而`+`字符（因为有歧义）必须被转义成`%2B`。
-
-这意味着字符串`blue+light blue`必须在*路径*和*查询*部分进行不同编码：`http://example.com/blue+light%20blue?blue%2Blight+blue`。从这可以推断，没有 URL 语法结构的意识，是不可能编码一个完整结构的 URL。
-
-假设下面 Java 代码构造一个 URL：
-
-```java
-String str = "blue+light blue";
-String url = "http://example.com/" + str + "?" + str;
 ```
 
-编码 URL 不是为了转义那些超出保留集的字符的简单迭代：我们必须知道我们想要编码的每个部分用的哪个保留集。
+### 案例 2
 
-这意味着大多数 URL 重写过滤器，决定将 URL 子字符串从一个*部分*带入另一部分而不注意适当的编码，将是错误的。不了解 URL 特定的部分是不可能编码一个 URL 的。
+向 Flask 接口发送 POST 请求，发现获取到数据中`+`变为了空格。
 
-### 保留字符不是你想的那样
+```bash
+$ curl -d "a=1+2" "http://127.0.0.1:5000/add"
 
-大多数人忽略`+`是允许在*路径*部分的，并且特指加号而不是一个空格。还有其他惊喜：
+> POST /add HTTP/1.1
+> Host: 127.0.0.1:5000
+> User-Agent: curl/7.79.1
+> Accept: */*
+> Content-Length: 5
+> Content-Type: application/x-www-form-urlencoded
 
-- `?`在*查询*部分允许不被转义；
-- `/`在*查询*部分允许不被转义；
-- `=`在*路径*部分或者*查询参数*值以及*路径段*任何位置允许不被转义；
-- `:@-.~!$&'()*+,;=`在*路径段*部分任何位置允许不被转义；
-- `/?:@-.~!$&'()*+,;=`在*片段*部分任何位置允许不被转义。
 
-尽管这有点疯狂，但`http://example.com/:@-.!$&'()+,=;:@-.!$&'()+,=:@-.!$&'()+,==?/?:@-.!$'()+,;=/?:@-.!$'()+,;==#/?:@-.!$&'()+,;=`是一个合法的 HTTP URL，这就是标准。
+# 接口中使用request.form获取参数
+{
+  "a": "1 2"
+}
 
-出于好奇，前面的 URL 扩展为：
-｜ 部分 ｜ 数据 ｜
-| ----: | ----: |
-｜ 协议 ｜ http ｜
-｜ 主机 ｜ example.com ｜
-｜ 路径 ｜ /:@-._~!$&'()\*+,= ｜
-｜ 路径参数名 ｜ :@-._~!$&'()*+, ｜
-｜ 路径参数值 ｜ :@-._~!$&'()_+,== ｜
-｜ 查询参数名 ｜ /?:@-.\_~!$'()_ ,; ｜
-｜ 查询参数值 ｜ /?:@-._~!$'()\* ,;== ｜
-｜ 片段 ｜ /?:@-._~!$&'()\*+,;= ｜
-
-真疯狂。
-
-### 解码后无法分析 URL
-
-URL 的语法只在 URL 编码**之前**有意义：URL 解码之后，保留字符可能出现。
-
-例如`http://example.com/blue%2Fred%3Fand+green`解码前有下面部分：
-｜ 部分 ｜ 数据 ｜
-| ----: | ----: |
-｜ 协议 ｜ http ｜
-｜ 主机 ｜ example.com ｜
-｜ 路径段 ｜ blue%2Fred%3Fand+green ｜
-｜ 被解码的路径段 ｜ blue/red?and+green ｜
-
-因此，我们查找的是一个叫`blue/red?and+green`的文件，**不是**`blue`文件夹下的`red?and+green`文件。
-
-如果我们在分析前解码`http://example.com/blue%2Fred%3Fand+green`，将给到这样的部分：
-｜ 部分 ｜ 数据 ｜
-| ----: | ----: |
-｜ 协议 ｜ http ｜
-｜ 主机 ｜ example.com ｜
-｜ 路径段 ｜ blue ｜
-｜ 路径段 ｜ red ｜
-｜ 查询参数名 ｜ and+green ｜
-
-这很明显是错的：分析保留字符和 URL 的部分必须在 URL 编码前完成。这意味着 URL 重写过滤器不应该尝试在匹配 URL 之前对其进行解码，**前提**是允许对保留字符进行 URL 编码（取决于你的应用）。
-
-### 解码后的 URL 不能重新编码成同样的形式
-
-如果你把`http://example.com/blue%2Fred%3Fand+green`解码成`http://example.com/blue/red?and+green`，然后继续编码（即使使用知道 URL 每个部分语法的编码器）你将得到`http://example.com/blue/red?and+green`，因为是一个合法的 URL。它和我们解码的原始 URL 完全不同。
-
-## 用 Java 正确处理 URL
-
-当你已经掌握了*URL-fu*的黑带时，你会发现当涉及 URL 时，仍然有相当多的 Java 特有陷阱。通往正确的 URL 处理之路不适合胆小的人。
-
-### 不要对整个 URL 用`java.net.URLEncoder`或`java.net.URLDecoder`
-
-我们没有开玩笑。这些类不是用来编码或解码 URL 的，因为他们的 API 文档[清晰地写着](http://download.java.net/jdk7/docs/api/java/net/URLEncoder.html)：
-
-> 为 HTML 表单编码的工具类。这个类包含转换一个字符串到`application/x-www-form-urlencoded`MIME 格式的静态方法。关于 HTML 表单编码的更多信息，参阅 HTML 规范。
-
-这与 URL 无关。充其量是类似*查询*部分的编码。使用它来编码或解码整个 URL 是错误的。你会认为标准的 JDK 有一个标准的类来正确的处理 URL 编码（即每个部分的），但是没有，或者我们没有找到它，这导致了很多人为了错误的目的来使用`URLEncoder`。
-
-### 没有编码 URL 每个部分不要构建 URL
-
-正如我们已经声明的：完整构建的 URL 不能被 URL 编码。
-
-例如下面的案例：
-
-```java
-String pathSegment = "a/b?c";
-String url = "http://example.com/" + pathSegment;
 ```
 
-如果`a/b?c`意思是一个*路径段*，是不可能从`http://example.com/a/b?c`转换回本身的样子的，因为是它一个合法的 URL。我们前面已经解释过了。
+## 为什么
 
-这是正确的代码：
+### Flask 做了啥？
 
-```java
-String pathSegment = "a/b?c";
-String url = "http://example.com/"
-            + URLUtils.encodePathSegment(pathSegment);
+1.  Flask 通过`request.args` 和 `request.form`获取请求参数，最终都会经过一个`_url_decode_impl`函数对其进行解码
+
+```python
+# werkzeug/urls.py
+def _url_decode_impl(
+    pair_iter: t.Iterable[t.AnyStr], charset: str, include_empty: bool, errors: str
+) -> t.Iterator[t.Tuple[str, str]]:
+    for pair in pair_iter:
+        ...
+        yield (
+            url_unquote_plus(key, charset, errors),
+            url_unquote_plus(value, charset, errors),
+        )
 ```
 
-现在我们使用工具类`URLUtils`，因为没有尽快在网上找到一个详细的可用类，我们不得不自己组装它。前面的代码将给你正确的被编码 URL`http://example.com/a%2Fb%3Fc`。
+2.  其中`url_unquote_plus`函数是先对键值中的`+`替换为空格，再按`%`分组解码。
 
-注意这同样出现在查询字符串：
-
-```java
-String value = "a&b==c";
-String url = "http://example.com/?query=" + value;
+```python
+# werkzeug/urls.py
+def url_unquote_plus(
+    s: t.Union[str, bytes], charset: str = "utf-8", errors: str = "replace"
+) -> str:
+    ...
+    if isinstance(s, str):
+        s = s.replace("+", " ")
+    else:
+        s = s.replace(b"+", b" ")
+    return url_unquote(s, charset, errors)
 ```
 
-这将给你一个合法 URL`http://example.com/?query=a&b==c`，但不是我们想要的`http://example.com/?query=a%26b==c`
+所以 Flask 框架下认为拿到的请求数据是已经被 URL 编码的数据，自动进行了解码工作。而这解码工作中就包含了`+`的替换以及百分号编码。
 
-### 不要指望[URI.getPath()](<http://download.java.net/jdk7/docs/api/java/net/URI.html#getPath()>)给你结构化数据
+参数中`1+2`中的`+`被认为是空格的编码，解析时就把`+`转换回空格了，变成`1 2`。
 
-因为一旦一个 URL 已经被解码，语法信息就被丢失，下面的代码是错误的：
+不止 Flask 框架，其他语言的 Web 框架也有相似的操作，比如 Go 的标准库`net/url`。
 
-```java
-URI uri = new URI("http://example.com/a%2Fb%3Fc");
-for(String pathSegment : uri.getPath().split("/"))
-  System.err.println(pathSegment);
+为什么获取到的参数会需要解码呢？解码规则又有哪些呢？
+
+### 什么是 URL 编码？
+
+也叫百分号编码，由百分比字符`%`后跟替换字符的 US-ASCII 的十六进制表示。
+
+在[RFC3986](https://www.rfc-editor.org/rfc/rfc3986#section-3)标准中有明确定义：URL 由一字母、数字和一些特殊字符组成，特殊字符用于分隔或标识。
+
+```
+         foo://example.com:8042/over/there?name=ferret#nose
+         \_/   \______________/\_________/ \_________/ \__/
+          |           |            |            |        |
+       scheme     authority       path        query   fragment
+          |   _____________________|__
+         / \ /                        \
+         urn:example:animal:ferret:nose
 ```
 
-它将先将路径`a%2Fb%3Fc`解码为`a/b?c`，然后拆分到不应该被拆分到*路径段*部分。
+| 结构      | 说明                         | 语法                                                          |
+| --------- | ---------------------------- | ------------------------------------------------------------- |
+| schema    | 协议                         | ALPHA \*( ALPHA / DIGIT / “+” / “-” / “.” )                   |
+| authority | 权限                         | \[ userinfo “@” \] host \[ “:” port \]                        |
+| path      | 路径，类似文件系统的层次结构 | _( “/” _(unreserved / pct-encoded / sub-delims / “:” / “@”) ) |
+| query     | 查询字符串，检索资源         | \*( pchar / “/” / “?” )                                       |
+| fragment  | 片段，指向资源特定部分       | \*( pchar / “/” / “?” )                                       |
 
-正确的代码当然是使用[未解码路径](<http://download.java.net/jdk7/docs/api/java/net/URI.html#getRawPath()>)：
+为了确保 URL 能被正确解析避免歧义，其他字符或不用于其分隔或标识目的的特殊字符需要被编码，转换成在 URL 中没有语法意义的表示，即 URL 编码。
 
-```java
-URI uri = new URI("http://example.com/a%2Fb%3Fc");
+如：`http://example.com/what?.jpg`经过编码转义为：`http://example.com/what%3F.jpg`，确保`?`不会被认为是路径和查询的分隔符，被错误解析。
 
-for(String pathSegment : uri.getRawPath().split("/"))
-  System.err.println(URLUtils.decodePathSegment(pathSegment));
+标准里也指出了 URL 中的几种字符：
+
+- 保留字符：用于分隔目的的字符，当不用作分隔时需要编码
+
+```
+reserved    = gen-delims / sub-delims
+gen-delims  = ":" / "/" / "?" / "#" / "[" / "]" / "@"
+sub-delims  = "!" / "$" / "&" / "'" / "(" / ")" / "*" / "+" / "," / ";" / "="
+
 ```
 
-注意路径参数仍然存在：如果需要的话请处理他们。
+- 未保留字符：允许但没有保留用途的，不需要编码
 
-### 不要指望 Apache Commons HTTPClient 的`URI`类能做到
-
-[Apache Commons HTTPClient 3](http://hc.apache.org/httpclient-3.x/)的[`URI`](http://hc.apache.org/httpclient-3.x/apidocs/org/apache/commons/httpclient/URI.html)类使用[Apache Commons Code](http://commons.apache.org/codec/)的`URLCodec`来 URL 编码，正如他们[API 文档](http://commons.apache.org/codec/api-release/org/apache/commons/codec/net/URLCodec.html)提到的，这和使用`java.net.URLEncoder`一样是错误的。不仅因为它使用错误的编码器，而且对每个部分解码，就好像[他们有一样的保留集](http://svn.apache.org/repos/asf/httpcomponents/oac.hc3x/trunk/src/java/org/apache/commons/httpclient/URI.java)
-
-## 修复 Web 应用中各级的 URL 编码
-
-最近我们不得不在应用中修复了不少 URL 编码问题。从对 Java 的支持，到较低级别的 URL 重写。我们将在这里列出几个需要的修改：
-
-### 始终在构建 URL 时为他们编码
-
-在我们的 HTML 文件中，我们替换了所有出现的这个：
-
-```js
-var url = "#{vl:encodeURL(contextPath + '/view/' + resource.name)}";
+```
+unreserved  = ALPHA / DIGIT / "-" / "." / "_" / "~"
 ```
 
-改用：
+- 不安全字符：容易引发歧义的字符，始终需要编码
 
-```js
-var url = "#{contextPath}/view/#{vl:encodeURLPathSegment(resource.name)}";
+| --- | --- |
+| 空格 | 当 URL 被转录、排版、接受文字处理程序的处理时，重要的空格可能会消失，并且可能会引入不重要的空格 |
+| % | 用于对其他字符进行编码 |
+| # | 在 www 和其他系统中用于将 URL 与片段/锚定分隔开可能跟随它的标识符 |
+| " | 在某些系统中用于分隔 URL |
+| <> | 被用作自由文本中 URL 的分隔符 |
+| {}\|\\^\[\]\`~ | 已知网关和其他传输代理有时会修改这些字符 |
+
+可以看到空格作为“不安全的字符”，是需要百分比编码的，空格的十六进制表示为 20，则空格应该编码为`%20`，为什么会有编码为`+`的情况呢？
+
+### URL 不同部分编码不同
+
+URL 不同部分的保留字符不同，如字符`+`在路径中是不用编码的，但在查询字符串中是保留字符，需要被编码：
+
+```http
+http://127.0.0.1:5000/a+b?a=1+2
 ```
 
-查询参数也是这样。
+路径中`a+b`的`+`即被认为是加号本身，解码时不会被转义，而参数中`1+2`的`+`则被认为是空格的转义，将解码为`1 2`。
 
-### 确保你的 URL 重写过滤器正确处理 URL
+如果需要在参数中传递正确加号本身，则需要先将`+`编码成`%2B`，即让加号正确传递的 URL 如下：
 
-[Url Rewrite Filter](http://tuckey.org/urlrewrite/)是我们在[Seam](http://www.seamframework.org/)中使用的 URL 重写过滤器，用于将漂亮的 URL 转换为依赖于应用程序的 URL。
+```http
+http://127.0.0.1:5000/a+b?a=1%2B2
+```
 
-例如，我们用它来重写`http://beta.visiblelogistics.com/view/resource/FOO/bar`成`http://beta.visiblelogistics.com/resources/details.seam?owner=FOO&name=bar`。**显然**这涉及到把 URL 一些字符串从一个部分带到两一个部分，意味着我们不得不从*路径段*部分解码，并且作为*查询值*部分来重新编码
+在[W3C 标准](https://www.w3.org/Addressing/URL/uri-spec.html)中规定了查询字符串中保留了`+`作为空格的转义
 
-我们的初始规则看起来如下：
+> 在查询字符串中，加号保留为空格的简写符号。因此，真正的加号必须被编码。该方法用于使查询 URI 更容易在不允许空格的系统中传递。
+
+同时[W3C 的 HTML4 标准](https://www.w3.org/TR/html4/interact/forms.html#h-17.13.4.1)中也规定了`application/x-www-form-urlencoded`的编码规则：
+
+> 1.  键值被转义。空格字符替换为`+`，然后保留字符按[RFC1738](https://www.rfc-editor.org/rfc/rfc1738#section-2.2)的 2.2 节所述转义：非字母数字字符替换为`%HH`，一个百分号和两个十六进制数字表示字符的 ASCII 码。换行符转义为“CR LF”对（即`%0D%0A`）。
+> 2.  键值按照它们在文档中出现的顺序列出。键值之间通过`=`分隔，键值对之间通过`&`分隔。
+
+这也就是为什么前面提到的两个案例查询字符串中`+`都被认为是空格的转义，早在 1996 年就成为推荐标准，也是大多讨论中提到的“历史原因”，
+
+大多语言和框架都有提供这种为不同部分采用不同编码的方式，如 Go 的标准库`net/url`就有`PathEscape`和`QueryEscape`来分别对路径和查询字符串编码。
+
+```go
+import "net/url"
+
+// 对路径编码
+url.PathEscape("1+2 3")  // 1+2%203
+
+// 对查询字符串编码，会指定空格转换为“+”
+url.QueryEscape("1+2 3")  // 1%2B2+3
+
+```
+
+### 用哪种字符编码？
+
+最初的[RFC1738](https://www.rfc-editor.org/rfc/rfc1738)只是规定了字符要先按某种字符编码转义，具体是什么字符编码要靠 URI 提供信息，如果没有提供则无法可靠的被解析。
+
+最开始只要处理 ASCII 字符，到后来出现非 ASCII 字符，比如我们的 GB2312 字符集，不同的编码让通信变得困难，后来便出现了 Unicode 及其常用的一些字符编码如 UTF-8、UTF-16。
+
+最新的[RFC3986](https://www.rfc-editor.org/rfc/rfc3986#section-3)标准建议先按 UTF-8 转换，但此前的 URI 并不受该标准影响。
+
+如 HTTP 的请求头`Content-type`中可以使用`charset`指定字符编码：
+
+```http
+Content-Type: application/x-www-form-urlencoded; charset=utf-8
+```
+
+## 如何正确编码与解码
+
+了解了 URL 的编码规则后，我们提供的 URL 各部分需要按标准编码，解码时也是对应不同部分按标准解码，保证数据的可靠传输。
+
+- 注意对 URL 的不同部分的保留集做不同的编码处理，根据要编码的对象选择合适的方式，而不是直接对整个 URL 用一套编码。
+  - **把空格编码为`%20`，加号`+`编码为`%2B`会更安全，因为他们适用于 URL 的各个部分**
+- 注意 W3C 标准的查询字符串与`application/x-www-form-urlencoded`是将空格编码为`+`，对应的解码也需要遵循该标准。
+- 注意编码和解码时使用统一的字符编码。
+
+> 思考：对已编码的 URL 解码后，是否能重新正确编码？`http://example.com/a%2Fb%3F1+2`
+
+### 使用 HTML 的 form 表单
+
+在通过 HTML form 可以提交 GET 和 POST 请求，请求的数据都会先被 URL 编码后才发送，要注意表单提交的 GET 查询字符串和`application/x-www-form-urlencoded`格式传递的空格会被编码为`+`。
+
+如提交 GET 请求的表单：
 
 ```html
-<urlrewrite decode-using="utf-8">
-  <rule>
-    <from>^/view/resource/(.*)/(.*)$</from>
-    <to encode="false">/resources/details.seam?owner=$1&name=$2</to>
-  </rule>
-</urlrewrite>
+<form action="/add" method="get">
+  <input type="text" name="name_a" value="a+b" />
+  <input type="text" name="name_b" value="a b" />
+  <button type="submit">Submit</button>
+</form>
 ```
 
-事实证明，只有两种方式处理 Url Rewrite Filter 的 URL 编码：
+可以在地址栏看到实际请求的数据已经被 URL 编码：
 
-（未完，有空再说）
+![](/img/web/url-encoding_1.png)
 
-## 结论
+如提交 POST 请求的表单，请求头的`Content-Type`由 form 元素上的`enctype`属性指定，默认是`application/x-www-form-urlencoded`：
 
-我们希望澄清一些 URL 误区和常见错误。除了澄清它们之外，要明确的是，它并不像一些人认为的那样简单。我们已经说明了 Java 中的常见错误，以及 web 应用程序部署的整个链。现在每个人都是 URL 专家，我们希望再也不要看到相关的 bug。请 SUN，请**逐步**增加对 URL 编码/解码的标准支持。
+```html
+<form action="/add" method="post">
+  <input type="text" name="name_a" value="a+b" />
+  <input type="text" name="name_b" value="a b" />
+  <button type="submit">Submit</button>
+</form>
+```
+
+实际请求发送的也是被 URL 编码过的数据：
+
+![](/img/web/url-encoding_2.png)
+
+### JavaScript
+
+js 提供的函数：
+
+| 函数                                    | 字符编码 | 不编码的字符                                                                                                          | 说明                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| escape / unescape                       | UTF-16   | `@` `*` `_` `+` `-` `.` `/`                                                                                           | \- 已弃用<br>\- 参数为字符串，不适用整个 URL<br>\- 使用 UTF-16 编码，码点大于 0x10000 则与 UTF-8 不一致了<br>\- 不能编码`+`，对于会把`+`解码为空格的服务端不能正确转义                                                                                                                                         |
+| encodeURI / decodeURI                   | UTF-8    | 保留字符：`;` `,` `/` `?` `:` `@` `&` `=` `+` `$`<br>非转义字符：`-` `_` `.` `!` `~` `*` `'` `(` `)`<br>数字符号：`#` | \- 参数为完整 URL，不仅是查询字符串<br>\- 适用百分号编码，不能编码`+`，对于会把`+`解码为空格的服务端不能正确转义                                                                                                                                                                                               |
+| encodeURIComponent / decodeURIComponent | UTF-8    | `-` `_` `.` `!` `~` `*` `'` `(` `)`                                                                                   | \- 参数为单个字符串，不适用整个 URL<br>\- 按百分号编码，如空格编码为`%20`<br>\- 为了更严格遵循[RFC3986](https://www.rfc-editor.org/rfc/rfc3986#section-3)，[MDN](https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/encodeURIComponent#%E6%8F%8F%E8%BF%B0)上有推荐的安全使用方式 |
+
+```js
+// 使用的字符编码不同，编码结果不同
+escape("中"); // %u4E2D
+encodeURI("中"); // %E4%B8%AD
+encodeURIComponent("中"); // %E4%B8%AD
+
+// 对于字符串要注意哪些字符不会被转义
+escape("a=1+2"); // a%3D1+2
+encodeURI("a=1+2"); // a=1+2
+encodeURIComponent("a=1+2"); // a%3D1%2B2
+```
+
+处理 URL 的查询字符串可以使用类`URLSearchParams`，会将空格编码为`+`
+
+```js
+const params = new URLSearchParams();
+params.set("a", "1+2");
+params.set("b", "1 2");
+params.toString(); // a=1%2B2&b=1+2
+```
+
+还可以使用一些第三方库处理查询字符串，如[query-string](https://github.com/sindresorhus/query-string#readme)，默认按百分号编码：
+
+```js
+import qs from "query-string";
+
+// 编码，默认按百分号编码
+const obj = { a: "1+2", b: "1 2" };
+qs.stringify(obj); // a=1%2B2&b=1%202
+
+// 解码，按W3C标准将“+”解码为空格
+const query = "a=1+2";
+qs.parse(query); // {a: "1 2"}
+
+const url = "http://127.0.0.1:5000/a+b?a=1+2";
+qs.parseUrl(url); // {"url":"http://127.0.0.1:5000/a+b","query":{"a":"1 2"}}
+```
+
+### Python3
+
+提供了两种编码方式`quote`和`quote_plus`，默认字符编码是 UTF-8
+
+- `quote`：百分号编码，适用于编码 URL 的路径
+- `quote_plus`：百分号编码并指定空格编码为`+`，适用于编码查询参数
+
+```python
+from urllib import parse
+
+# 对字符串百分比编码，默认是UTF-8
+parse.quote("1+2 3")  # 1%2B2%203
+parse.quote("中")  # %E4%B8%AD
+
+# 编码方式指定空格转换为“+”
+parse.quote_plus("1+2 3")  # 1%2B2+3
+
+# 编码dict或双元素tuple的查询字符串，默认使用quote_plus编码方式
+params = {"a": "1+2", "b": "1 2"}
+parse.urlencode(params)  # a=1%2B2&b=1+2
+
+# 可以指定使用quote的百分号编码
+parse.urlencode(params, quote_via=parse.quote)  # a=1%2B2&b=1%202
+
+```
+
+分别对应的解码方式`unquote`和`unquote_plus`
+
+```python
+from urllib import parse
+
+parse.unquote("1%2B2%203")  # 1+2 3
+parse.unquote("%E4%B8%AD")  # 中
+
+parse.unquote_plus("1%2B2+3")  # 1+2 3
+
+# 将查询字符串解码成dict或tuple列表
+query = "a=1%2B2&b=1+2"
+parse.parse_qs(query)  # {'a': ['1+2'], 'b': ['1 2']}
+parse.parse_qsl(query)  # [('a', '1+2'), ('b', '1 2')]
+```
+
+### Go 中的编码
+
+同样提供两种编码方式`PathEscape`和`QueryEscape`
+
+```go
+import "net/url"
+
+// 对路径编码
+url.PathEscape("1+2 3")  // 1+2%203
+
+// 对查询字符串编码，会指定空格转换为“+”
+url.QueryEscape("1+2 3")  // 1%2B2+3
+
+// 编码多个参数
+params := url.Values{}
+params.Add("a", "1+2")
+params.Add("b", "1 2")
+params.Encode()  // a=1%2B2&b=1+2
+```
+
+分别对应的解码方式`PathUnescape`和`QueryUnescape`
+
+```go
+import "net/url"
+
+// 对路径解码
+url.PathUnescape("1+2%203")  // 1+2 3
+
+// 对查询字符串解码
+url.QueryUnescape("1%2B2+3")  // 1+2 3
+
+// 解码URL成对象
+urlObj, _ := url.Parse("http://127.0.0.1:5000/a+b?a=1+2")
+urlObj.Query()  // map[a:[1 2]]
+
+// 解码查询参数成map
+query := "a=1%2B2&b=1+2"
+url.ParseQuery(query)  // map[a:[1+2] b:[1 2]]
+
+```
+
+## 扩展
+
+1.  字符集与字符编码：ASCII、Unicode、UTF-8
+2.  各种标准：RFC、W3C、ECMA、ISO
+3.  HTTP 基础
+
+## 参考
+
+https://www.w3.org/TR/html401/interact/forms.html#h-17.13.4.1
+
+https://www.w3.org/Addressing/URL/uri-spec.html
+
+https://en.wikipedia.org/wiki/Percent-encoding
+
+https://developer.mozilla.org/zh-CN/docs/Glossary/percent-encoding
+
+https://www.rfc-editor.org/rfc/rfc1738#section-2.2
+
+https://www.rfc-editor.org/rfc/rfc3986#section-2.2
