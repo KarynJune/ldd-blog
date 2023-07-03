@@ -9,7 +9,7 @@ on:
     branches: [ "main" ]
 
 env:
-  HUGO_VERSION: "0.96.0"
+  HUGO_VERSION: 0.96.0
   HUGO_BINARY: hugo_extended_0.96.0_Linux-64bit.tar.gz
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
@@ -26,9 +26,9 @@ jobs:
       - name: Install hugo & Build
         uses: wei/wget@v1
         with:
-          args: --quiet "https://github.com/gohugoio/hugo/releases/download/v${{ HUGO_VERSION }}/${{ HUGO_BINARY }}" && \
-            tar xzf ${HUGO_BINARY} && \
-            rm -r ${HUGO_BINARY} && \
+          args: --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY" && \
+            tar xzf $HUGO_BINARY && \
+            rm -r $HUGO_BINARY && \
             hugo
       - name: Deploy to ESC
         uses: easingthemes/ssh-deploy@v2.1.5
