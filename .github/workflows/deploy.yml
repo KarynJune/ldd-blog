@@ -1,12 +1,17 @@
 # This is a basic workflow to help you get started with Actions
 
-name: CD
+name: CICD
 
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "main" branch
   push:
     branches: [ "main" ]
+
+env:
+  HUGO_VERSION: 0.96.0
+  HUGO_BINARY: hugo_extended_${{ HUGO_VERSION }}_Linux-64bit.tar.gz
+  HUGO_URL: https://github.com/gohugoio/hugo/releases/download/v${{ HUGO_VERSION }}/${{ HUGO_BINARY }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -19,15 +24,19 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      
-      - name: ssh deploy
-        uses: appleboy/ssh-action@master
+      - name: Install hugo & Build
+        uses: wei/wget@v1
         with:
-          host: ${{ secrets.REMOTE_HOST }}
-          username: ${{ secrets.REMOTE_USERNAME }}
-          key: ${{ secrets.REMOTE_PRIVATE_KEY }}
-          script_stop: true
-          script: |
-            cd ~/Projects/ldd-blog
-            git pull
-            docker-compose up -d --build
+          args: --quiet "${HUGO_URL}" && \
+            tar xzf ${HUGO_BINARY} && \
+            rm -r ${HUGO_BINARY} && \
+            hugo
+      - name: Deploy to ESC
+        uses: easingthemes/ssh-deploy@v2.1.5
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.REMOTE_PRIVATE_KEY }}
+          ARGS: '-rltgoDzvO --delete'
+          SOURCE: public # Location of the packed files
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USERNAME }}
+          TARGET: /home/zjy/Projects/ldd-blog # ECS target locatio
