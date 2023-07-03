@@ -25,12 +25,8 @@ jobs:
       - uses: actions/checkout@v3
       - name: Install Dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y 
           wget --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY"
           tar xzf ${HUGO_BINARY}
-          rm -r ${HUGO_BINARY}
-          mv hugo /usr/bin
       - name: Build
         run: hugo
       - name: Deploy to ESC
