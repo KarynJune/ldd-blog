@@ -23,11 +23,11 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - name: Install Dependencies
+      - name: Install Dependencies & Build
         run: |
           wget --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY"
           tar xzf ${HUGO_BINARY}
-          hugo
+          ./hugo
       - name: Deploy to ESC
         uses: easingthemes/ssh-deploy@v2.1.5
         env:
