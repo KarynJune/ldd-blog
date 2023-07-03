@@ -23,16 +23,14 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - name: Download hugo
-        uses: wei/wget@v1
-        with:
-          args: --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY"
-      - name: Compress hugo
-        uses: a7ul/tar-action@v1.1.0
-        with:
-          command: x
-          cwd: ./
-          files: $HUGO_BINARY
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y 
+          wget --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY"
+          tar xzf ${HUGO_BINARY}
+          rm -r ${HUGO_BINARY}
+          mv hugo /usr/bin
       - name: Build
         run: hugo
       - name: Deploy to ESC
