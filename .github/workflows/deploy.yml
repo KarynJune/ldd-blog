@@ -27,8 +27,7 @@ jobs:
         run: |
           wget --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY"
           tar xzf ${HUGO_BINARY}
-      - name: Build
-        run: hugo
+          hugo
       - name: Deploy to ESC
         uses: easingthemes/ssh-deploy@v2.1.5
         env:
