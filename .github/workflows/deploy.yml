@@ -30,7 +30,7 @@ jobs:
       - name: Build
         uses: a7ul/tar-action@v1.1.0
         with:
-          command: xzf
+          command: x
           cwd: ./
           files: $HUGO_BINARY && hugo
       - name: Deploy to ESC
