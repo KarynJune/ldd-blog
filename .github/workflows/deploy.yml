@@ -23,16 +23,18 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
-      - name: Install hugo & Build
+      - name: Download hugo
         uses: wei/wget@v1
         with:
           args: --quiet "https://github.com/gohugoio/hugo/releases/download/v$HUGO_VERSION/$HUGO_BINARY"
-      - name: Build
+      - name: Compress hugo
         uses: a7ul/tar-action@v1.1.0
         with:
           command: x
           cwd: ./
-          files: $HUGO_BINARY && hugo
+          files: $HUGO_BINARY
+      - name: Build
+        run: hugo
       - name: Deploy to ESC
         uses: easingthemes/ssh-deploy@v2.1.5
         env:
