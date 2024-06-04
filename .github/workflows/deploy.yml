@@ -35,4 +35,4 @@ jobs:
           SOURCE: public # Location of the packed files
           REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
           REMOTE_USER: ${{ secrets.REMOTE_USERNAME }}
-          TARGET: /home/${{ secrets.REMOTE_USERNAME }}/Projects/ldd-blog # ECS target locatio
+          TARGET: /home/${{ secrets.REMOTE_USERNAME }}/Projects/nginx-proxy-manager/data/static/ldd-blog # ECS target locatio
